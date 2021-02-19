@@ -5,8 +5,8 @@
 # Authored by:      Ghalib A on for AusSeaBed & original file is forked from POSMVRead.py by paul.kennedy@guardiangeomatics.com
 # description:      python module to read an Applanix .000 binary file
 # notes:            See main at end of script for example how to use this
-# based on ICD file version 4  
-# developed for Python version 3.4 
+# based on ICD file version 4
+# developed for Python version 3.4
 # See readme.md for more details
 
 import sys
@@ -40,7 +40,7 @@ def main():
 	if len(sys.argv)==1:
 		parser.print_help()
 		sys.exit(1)
-	
+
 	args = parser.parse_args()
 
 	matches				= []
@@ -62,7 +62,7 @@ def main():
 
 	if args.summary:
 		print ("Scanning file to count all records...")
-	
+
 
 # #################################################################################
 	#open the file for reading by creating a new POSReader class and passin in the filename to open.
@@ -101,7 +101,7 @@ def main():
 					lastrecordTimeStamp = r.recordTimeStamp
 					lastMsg = msg
 					continue
-			
+
 			if args.warning:
 				if (groupID == 10): # "MSG General Status & FDIR - ERROR MESSAGES!"
 					if (r.recordTimeStamp - lastrecordTimeStamp) > args.step:
@@ -112,7 +112,7 @@ def main():
 					continue
 
 			if args.position:
-				if (groupID == 1): 
+				if (groupID == 1):
 					datagram.read()
 					if totalRecords== 0:
 						print (datagram.header())
@@ -122,7 +122,7 @@ def main():
 					continue
 
 			if args.trueheave:
-				if (groupID == 111): 
+				if (groupID == 111):
 					datagram.read()
 					if totalRecords== 0:
 						print (datagram.header())
@@ -130,7 +130,7 @@ def main():
 					continue
 
 			if args.attitude:
-				if (groupID == 4): 
+				if (groupID == 4):
 					datagram.read()
 					# if totalRecords== 0:
 					# 	print (datagram.header())
@@ -153,9 +153,14 @@ def main():
 			# print (newfilename.getJulianDay(r.fileStartDateObject))
 			# strDate = r.fileStartDateObject
 			# print ("Output: " + strDate)
-			startYear = (r.fileStartDateObject).year 
+			startYear = (r.fileStartDateObject).year
 			startDate = str(startDate).split()[0]
 			jd = jd.getJulianDay(startDate)
+			if jd < 100 and jd > 9:
+				 jd = '0' + str(jd)
+			elif jd < 10:
+				 jd = '00' + str(jd)
+
 			oldFilename = sys.argv[2]
 			newFilename = str(startYear) + "-" + str(jd) + "_" + oldFilename
 			print(newFilename)
@@ -166,7 +171,7 @@ def main():
 				# print ("%7d, %s" %(v, getDatagramName(k)))
 			# print ("%10d, %s" % (totalRecords, "Total Records"))
 			# print ("File Duration:" + from_timestamp(r.timeOrigin + r.recordTimeStamp) - startDate)
-			
+
 
 ###############################################################################
 class JulianDay(object):
@@ -182,7 +187,7 @@ class JulianDay(object):
       return days[d[1]-1]+d[2]
 
 
-class C_M56: 
+class C_M56:
 	def __init__(self, fileptr, numberOfBytes, timeOrigin):
 		self.name = "General Data Message"
 		self.typeOfDatagram = 56
@@ -204,7 +209,7 @@ class C_M56:
 		rec_len = struct.calcsize(rec_fmt)
 		rec_unpack = struct.Struct(rec_fmt).unpack
 		s = rec_unpack(self.fileptr.read(rec_len))
-		
+
 		# intro parameters
 		self.groupStart			= s[0]
 		self.groupID			= s[1]
@@ -221,19 +226,19 @@ class C_M56:
 		self.alignmentStatus	= s[10]
 		self.latitude			= s[11]
 		self.longitude			= s[12]
-		self.altitude			= s[13] 
+		self.altitude			= s[13]
 		self.horizontalPositionCEP	= s[14]
 		self.initialAltitudeRMS	= s[15]
 		self.initialDistance	= s[16]
 		self.initialRoll		= s[17]
 		self.initialPitch		= s[18]
-		self.initialHeading		= s[19]				
+		self.initialHeading		= s[19]
 		self.pad				= s[20]
 		self.checksum			= s[21]
 		self.groupEnd			= s[22]
-		
+
 		self.timeStamp = to_timestamp(datetime.datetime(self.year, self.month, self.day, self.hour, self.minute, self.second)) + self.timeOrigin
-		
+
 ###############################################################################
 class C_110:
 	def __init__(self, fileptr, numberOfBytes, timeOrigin):
@@ -286,7 +291,7 @@ class C_110:
 			self.data += "TrueZ inuse"
 
 ###############################################################################
-class C_111: 
+class C_111:
 	def __init__(self, fileptr, numberOfBytes, timeOrigin):
 		self.name = "TrueHeave (111)"
 		self.typeOfDatagram = 111
@@ -311,7 +316,7 @@ class C_111:
 		rec_unpack = struct.Struct(rec_fmt).unpack
 		# bytesRead = rec_len
 		s = rec_unpack(self.fileptr.read(rec_len))
-		
+
 		# intro parameters
 		self.groupStart			= s[0]
 		self.groupID			= s[1]
@@ -333,7 +338,7 @@ class C_111:
 		self.heaveTime2			= s[14] + self.timeOrigin
 		self.rejectedIMUCount	= s[15]
 		self.outOfRangeIMUCount	= s[16]
-		
+
 		self.pad				= s[17]
 		self.checksum			= s[18]
 		self.groupEnd			= s[19]
@@ -382,7 +387,7 @@ class C_20:#MSG 20General Installation
 
 	def __str__(self):
 		return str("%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f,%.3f, %.3f, %.3f, %.3f, %.3f, %.3f,   " % (self.Ref2IMU_X, self.Ref2IMU_Y, self.Ref2IMU_Z, self.Ref2PrimaryGPS_X, self.Ref2PrimaryGPS_Y, self.Ref2PrimaryGPS_Z, self.Ref2Aux1GPS_X, self.Ref2Aux1GPS_Y, self.Ref2Aux1GPS_Z, self.Ref2Aux2GPS_X, self.Ref2Aux2GPS_Y, self.Ref2Aux2GPS_Z, self.IMU2RefFrameAngle_X, self.IMU2RefFrameAngle_Y, self.IMU2RefFrameAngle_Z, self.RefFrame2VesselFrameAngle_X, self.RefFrame2VesselFrameAngle_Y, self.RefFrame2VesselFrameAngle_Z))
-		
+
 
 	def read(self):
 		self.fileptr.seek(self.offset, 0)
@@ -467,7 +472,7 @@ class C_112:
 		# rec_unpack = struct.Struct(rec_fmt).unpack
 		# # bytesRead = rec_len
 		# s = rec_unpack(self.fileptr.read(rec_len))
-		
+
 		# # intro parameters
 		# self.groupStart			= s[0]
 		# self.groupID			= s[1]
@@ -481,13 +486,13 @@ class C_112:
 		# self.distanceTypes		= s[7]
 		# self.variableGroupByteCount = s[9]
 		# self.NMEA		= s[10]
-		
+
 		# self.pad				= s[12]
 		# self.checksum			= s[12]
 		# self.groupEnd			= s[13]
 
 ###############################################################################
-class C_4: 
+class C_4:
 	def __init__(self, fileptr, numberOfBytes, timeOrigin):
 		self.typeOfDatagram = 4
 		self.name = getDatagramName(self.typeOfDatagram)
@@ -501,7 +506,7 @@ class C_4:
 
 	# def header(self):
 	# 	return "Date, Latitude, Longitude, Altitude, Pitch, Roll, Heading, Speed"
-		
+
 	def __str__(self):
 		return from_timestamp(self.timeStamp).strftime('%Y/%m/%d %H:%M:%S.%f')[:-3] + " unpublished format"
 
@@ -512,7 +517,7 @@ class C_4:
 		rec_unpack = struct.Struct(rec_fmt).unpack
 		# bytesRead = rec_len
 		s = rec_unpack(self.fileptr.read(rec_len))
-		
+
 		# intro parameters 4shh
 		self.groupStart				= s[0]
 		self.groupID				= s[1]
@@ -532,7 +537,7 @@ class C_4:
 		# self.checksum				= s[17]
 		# self.groupEnd				= s[18]
 ###############################################################################
-class C_1: 
+class C_1:
 	def __init__(self, fileptr, numberOfBytes, timeOrigin):
 		self.name = "Position, Velocity, Attitude (GRP:1)"
 		self.typeOfDatagram = 1
@@ -546,7 +551,7 @@ class C_1:
 
 	def header(self):
 		return "Date, Latitude, Longitude, Altitude, Pitch, Roll, Heading, Speed"
-		
+
 	def __str__(self):
 		return from_timestamp(self.timeStamp).strftime('%Y/%m/%d %H:%M:%S.%f')[:-3] + str(" %.10f, %.10f, %.3f, %.3f, %.3f, %.3f, %.3f" % (self.latitude, self.longitude, self.altitude, self.vesselPitch, self.vesselRoll, self.vesselHeading, self.vesselSpeed))
 
@@ -557,7 +562,7 @@ class C_1:
 		rec_unpack = struct.Struct(rec_fmt).unpack
 		# bytesRead = rec_len
 		s = rec_unpack(self.fileptr.read(rec_len))
-		
+
 		# intro parameters
 		self.groupStart			= s[0]
 		self.groupID			= s[1]
@@ -581,7 +586,7 @@ class C_1:
 		self.vesselPitch			= s[15]
 		self.vesselHeading			= s[16]
 		self.vesselWanderAngle		= s[17]
-		
+
 		self.vesselTrackAngle		= s[18]
 		self.vesselSpeed			= s[19]
 		self.vesselAngularRateLongitudinal			= s[20]
@@ -595,7 +600,7 @@ class C_1:
 		self.checksum				= s[26]
 		self.groupEnd				= s[27]
 ###############################################################################
-class C_10: 
+class C_10:
 	def __init__(self, fileptr, numberOfBytes, timeOrigin):
 		self.name = "General FDIR Metrics (10)"
 		self.typeOfDatagram = 10
@@ -617,7 +622,7 @@ class C_10:
 		rec_unpack = struct.Struct(rec_fmt).unpack
 		# bytesRead = rec_len
 		s = rec_unpack(self.fileptr.read(rec_len))
-		
+
 		# intro parameters
 		self.groupStart			= s[0]
 		self.groupID			= s[1]
@@ -640,7 +645,7 @@ class C_10:
 		self.FDIRLevel4Status		= s[15]
 		self.FDIRLevel5Status		= s[16]
 		self.extendedStatus			= s[17]
-		
+
 		self.checksum				= s[18]
 		self.groupEnd				= s[19]
 
@@ -933,7 +938,7 @@ class POSReader:
 		if not os.path.isfile(POSfileName):
 			print ("file not found:", POSfileName)
 		self.fileName = POSfileName
-		self.fileptr = open(POSfileName, 'rb')		
+		self.fileptr = open(POSfileName, 'rb')
 		self.fileSize = os.path.getsize(POSfileName)
 		self.fileStartDateObject = 0 #date object
 		self.recordTimeStamp = 0 #UTC unixtime
@@ -949,7 +954,7 @@ class POSReader:
 		haveSeconds = False
 		# now try and parse the filename for the GPS week.  There may be no datagram with this!
 		# 1. the documentation suggests we find the GPSweek in the group 3 message.  Unfortunately it may not be there
-		# 2. if no group 3 message, we can look at the MSG10 (General Data) message, which has a time data at 1Hz.  
+		# 2. if no group 3 message, we can look at the MSG10 (General Data) message, which has a time data at 1Hz.
 		#    This is not a bad one to set the GPSweek and our self.timeOrigin as the file may roll over into a new week (pkpk lets test this to see if true)
 		# 3. As a fallback, we can parse the filename.  If the user runs wioth the default, the filename has the data within the filename itself.
 		#    default filename is in the format 20170403_0138.000, 20170403_0138.001 etc
@@ -959,15 +964,15 @@ class POSReader:
 			# read a datagram.  If we support it, return the datagram type and aclass for that datagram
 			# The user then needs to cPOS the read() method for the class to undertake a fileread and binary decode.  This keeps the read super quick.
 			groupID, datagram = self.readDatagram()
-			
+
 			# Decode group 3 message for the GPSweek pkpk we can only do this once we have one for testing.  until then use the MESSAGE 10 record even though it is not very reliable
 			# pkpk  todo
 
 			# Decode MESSAGE 10 message for the GPSweek
 			# Note this does not change very regularly (if ever since start up) so is a very unreliable source
-			if (groupID == 56): # "MESSAGE56: General Data" 
+			if (groupID == 56): # "MESSAGE56: General Data"
 				datagram.read()
-				# self.fileStartDateObject  = datetime.datetime(datagram.year, datagram.month, datagram.day, datagram.hour, datagram.minute, int(datagram.second))				
+				# self.fileStartDateObject  = datetime.datetime(datagram.year, datagram.month, datagram.day, datagram.hour, datagram.minute, int(datagram.second))
 				#no point pretending this is more accurate.  It is not!
 				self.fileStartDateObject  = datetime.datetime(datagram.year, datagram.month, datagram.day)
 				self.week, gpsWeekinUTCSeconds, gpsWeekInGPSSeconds, gpsDayofWeek, gpsSecondsOfWeek, microseconds = self.utcToWeekSeconds(self.fileStartDateObject, 0)
@@ -983,7 +988,7 @@ class POSReader:
 				# we have a record, so quit
 				self.rewind()
 				return
-		
+
 		try:
 			base = os.path.basename(self.fileName)
 			name = os.path.splitext(base)[0]
@@ -1012,7 +1017,7 @@ class POSReader:
 	# 	return date_object
 
 ###############################################################################
-# https://stackoverflow.com/questions/45422739/gps-time-in-weeks-since-epoch-in-python	
+# https://stackoverflow.com/questions/45422739/gps-time-in-weeks-since-epoch-in-python
 # utctoweekseconds(datetime.datetime.strptime('2014-09-22 21:36:52',"%Y-%m-%d %H:%M:%S"),16)
 # gives: (1811, 1, 164196,0)
 ###############################################################################
@@ -1024,19 +1029,19 @@ class POSReader:
 		return datetime.datetime.strftime(epoch + elapsed,datetimeformat)
 
 	def utcToWeekSeconds(self, utcDate, leapseconds):
-		""" Returns the GPS week, the GPS day, and the seconds 
+		""" Returns the GPS week, the GPS day, and the seconds
 			and microseconds since the beginning of the GPS week """
 		datetimeformat = "%Y-%m-%d %H:%M:%S"
 		epoch = datetime.datetime.strptime("1980-01-06 00:00:00",datetimeformat)
 		# tdiff = utcDate - epoch - datetime.timedelta(seconds=leapseconds)
 		tdiff = utcDate - epoch
-		gpsweek = tdiff.days // 7 
+		gpsweek = tdiff.days // 7
 		gpsDayofWeek = tdiff.days - (7 * gpsweek)
 		gpsSecondsOfWeek = tdiff.seconds + 86400* (tdiff.days - (7 * gpsweek))
 		gpsWeekInGPSSeconds = 86400* (7 * gpsweek)
 		UnixTimeOrigin = datetime.datetime(1970,1,1)
 		UnixTimeOrigin = datetime.datetime(1970,1,1)
-		
+
 		gpsWeekInUTCSeconds = gpsWeekInGPSSeconds + (epoch - UnixTimeOrigin).total_seconds()
 
 		# date = self.weekSecondsToUtc(gpsweek, gpsSecondsOfWeek, leapseconds)
@@ -1064,10 +1069,10 @@ class POSReader:
 
 				# self.fileStartDateObject			= s[3] + self.timeOrigin #GPS seconds of the week using user prefernece.  We normally use this and the default is fine
 				# self.recordTimeStamp			= s[4] + self.timeOrigin #GPS seconds of the week in POS time (time since startup)
-				self.recordTimeStamp			= s[4] 
+				self.recordTimeStamp			= s[4]
 				# distanceTag		= s[5]
 				# timeTypes		= s[6]
-								
+
 				return numberOfBytes + 8, groupID, self.recordTimeStamp
 			except struct.error:
 				return 0,0,0,0,0,0
@@ -1076,12 +1081,12 @@ class POSReader:
 	def close(self):
 		'''close the current file'''
 		self.fileptr.close()
-		
+
 ###############################################################################
 	def rewind(self):
 		'''go back to start of file'''
-		self.fileptr.seek(0, 0)				
-	
+		self.fileptr.seek(0, 0)
+
 ###############################################################################
 	def currentPtr(self):
 		'''report where we are in the file reading process'''
@@ -1091,12 +1096,12 @@ class POSReader:
 	def moreData(self):
 		'''report how many more bytes there are to read from the file'''
 		return self.fileSize - self.fileptr.tell()
-			
+
 ###############################################################################
 	def readDatagramBytes(self, offset, byteCount):
 		'''read the entire raw bytes for the datagram without changing the file pointer.  this is used for file conditioning'''
 		curr = self.fileptr.tell()
-		self.fileptr.seek(offset, 0)   # move the file pointer to the start of the record so we can read from disc			  
+		self.fileptr.seek(offset, 0)   # move the file pointer to the start of the record so we can read from disc
 		data = self.fileptr.read(byteCount)
 		self.fileptr.seek(curr, 0)
 		return data
@@ -1110,7 +1115,7 @@ class POSReader:
 			numberOfBytes, groupID, recordTimeStamp = self.readDatagramHeader()
 			self.fileptr.seek(numberOfBytes, 1)
 			count += 1
-		self.rewind()		
+		self.rewind()
 		return count
 
 ###############################################################################
@@ -1118,34 +1123,34 @@ class POSReader:
 		'''read the datagram header.  This permits us to skip datagrams we do not support'''
 		numberOfBytes, groupID, recordTimeStamp = self.readDatagramHeader()
 
-		if groupID == 1: 
+		if groupID == 1:
 			dg = C_1(self.fileptr, numberOfBytes, self.timeOrigin)
-			return dg.typeOfDatagram, dg 
-		if groupID == 4: 
+			return dg.typeOfDatagram, dg
+		if groupID == 4:
 			dg = C_4(self.fileptr, numberOfBytes, self.timeOrigin)
-			return dg.typeOfDatagram, dg 
-		if groupID == 10: 
+			return dg.typeOfDatagram, dg
+		if groupID == 10:
 			dg = C_10(self.fileptr, numberOfBytes, self.timeOrigin)
-			return dg.typeOfDatagram, dg 
-		if groupID == 20: 
+			return dg.typeOfDatagram, dg
+		if groupID == 20:
 			dg = C_20(self.fileptr, numberOfBytes, self.timeOrigin)
-			return dg.typeOfDatagram, dg 
-		if groupID == 29: 
+			return dg.typeOfDatagram, dg
+		if groupID == 29:
 			dg = C_29(self.fileptr, numberOfBytes, self.timeOrigin)
-			return dg.typeOfDatagram, dg 
-		if groupID == 56: 
+			return dg.typeOfDatagram, dg
+		if groupID == 56:
 			dg = C_M56(self.fileptr, numberOfBytes, self.timeOrigin)
-			return dg.typeOfDatagram, dg 
-		if groupID == 110: 
+			return dg.typeOfDatagram, dg
+		if groupID == 110:
 			dg = C_110(self.fileptr, numberOfBytes, self.timeOrigin)
-			return dg.typeOfDatagram, dg 
-		if groupID == 111: 
+			return dg.typeOfDatagram, dg
+		if groupID == 111:
 			dg = C_111(self.fileptr, numberOfBytes, self.timeOrigin)
-			return dg.typeOfDatagram, dg 
-		if groupID == 112: 
+			return dg.typeOfDatagram, dg
+		if groupID == 112:
 			dg = C_112(self.fileptr, numberOfBytes, self.timeOrigin)
-			return dg.typeOfDatagram, dg 
-		
+			return dg.typeOfDatagram, dg
+
 		dg = UNKNOWN_RECORD(self.fileptr, numberOfBytes, groupID)
 		return dg.groupID, dg
 			# self.fileptr.seek(numberOfBytes, 1)
@@ -1260,7 +1265,7 @@ def to_timestamp(fileStartDateObject):
 
 def from_timestamp(unixtime):
 	return datetime.datetime(1970, 1 ,1) + timedelta(seconds=unixtime)
-		
+
 ###############################################################################
 if __name__ == "__main__":
 		main()
