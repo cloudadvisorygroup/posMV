@@ -1,8 +1,8 @@
-# POSMVRead.py
+# PosMVFileReader.py
 # =====
-# created:          May 2018
-# version           1.0.
-# by:               paul.kennedy@guardiangeomatics.com
+# created:          January 2021
+# version           1.0.1
+# Authored by:      Ghalib A on for AusSeaBed & original file is forked from POSMVRead.py by paul.kennedy@guardiangeomatics.com
 # description:      python module to read an Applanix .000 binary file
 # notes:            See main at end of script for example how to use this
 # based on ICD file version 4  
@@ -17,6 +17,7 @@ import math
 import pprint
 import struct
 import os.path
+import os
 import time
 from datetime import datetime
 from datetime import timedelta
@@ -148,15 +149,34 @@ def main():
 		if args.summary:
 			totalRecords = 0
 			print ("Last Record Date:", from_timestamp(r.timeOrigin + r.recordTimeStamp))
-			print ("TotalRecords, GroupName")
-			for k,v in sorted(summary.items()):
-				totalRecords += v
-				print ("%7d, %s" %(v, getDatagramName(k)))
-			print ("%10d, %s" % (totalRecords, "Total Records"))
-			print ("File Duration:" , 		from_timestamp(r.timeOrigin + r.recordTimeStamp) - startDate)
-
+			newfilename = JulianDay()
+			# print (newfilename.getJulianDay(r.fileStartDateObject))
+			strDate = str(r.fileStartDateObject)
+			print ("Output: " + strDate)
+			startDate = str(startDate).split()[0]
+			print (newfilename.getJulianDay(startDate))
+			# print ("TotalRecords, GroupName")
+			# for k,v in sorted(summary.items()):
+			#	totalRecords += v
+				# print ("%7d, %s" %(v, getDatagramName(k)))
+			# print ("%10d, %s" % (totalRecords, "Total Records"))
+			# print ("File Duration:" + from_timestamp(r.timeOrigin + r.recordTimeStamp) - startDate)
+			
 
 ###############################################################################
+class JulianDay(object):
+   def getJulianDay(self, date):
+      days = [0,31,28,31,30,31,30,31,31,30,31,30,31]
+      d = list(map(int,date.split("-")))
+      if d[0] % 400 == 0:
+         days[2]+=1
+      elif d[0]%4 == 0 and d[0]%100!=0:
+         days[2]+=1
+      for i in range(1,len(days)):
+         days[i]+=days[i-1]
+      return days[d[1]-1]+d[2]
+
+
 class C_M56: 
 	def __init__(self, fileptr, numberOfBytes, timeOrigin):
 		self.name = "General Data Message"
